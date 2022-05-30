@@ -52,6 +52,7 @@ def kl_threshold(request):
 
     return float(kl_threshold)
 
+
 @pytest.fixture(scope='session')
 def min_price(request):
     min_price = request.config.option.min_price
@@ -61,6 +62,7 @@ def min_price(request):
 
     return float(min_price)
 
+
 @pytest.fixture(scope='session')
 def max_price(request):
     max_price = request.config.option.max_price
@@ -69,3 +71,4 @@ def max_price(request):
         pytest.fail("You must provide max_price")
 
     return float(max_price)
+
