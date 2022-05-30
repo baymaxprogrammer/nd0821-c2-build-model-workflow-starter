@@ -75,8 +75,7 @@ def go(args):
     ######################################
     # Fit the pipeline sk_pipe by calling the .fit method on X_train and y_train
     logger.info("Running fit on the training dataset")
-    # import pdb;
-    # pdb.set_trace()
+
     sk_pipe.fit(X_train, y_train)
     ######################################
 
@@ -135,7 +134,12 @@ def go(args):
     # Here we save r_squared under the "r2" key
     run.summary['r2'] = r_squared
     # Now log the variable "mae" under the key "mae".
-    # YOUR CODE HERE
+    run.summary['mae'] = mae
+    # run.log(
+    #     {
+    #         "mae": mae
+    #     }
+    # )
     ######################################
 
     # Upload to W&B the feture importance visualization
@@ -155,7 +159,12 @@ def plot_feature_importance(pipe, feat_names):
     feat_imp = np.append(feat_imp, nlp_importance)
     fig_feat_imp, sub_feat_imp = plt.subplots(figsize=(10, 10))
     # idx = np.argsort(feat_imp)[::-1]
-    sub_feat_imp.bar(range(feat_imp.shape[0]), feat_imp, color="r", align="center")
+    sub_feat_imp.bar(
+        range(
+        feat_imp.shape[0]),
+        feat_imp,
+        color="r",
+        align="center")
     _ = sub_feat_imp.set_xticks(range(feat_imp.shape[0]))
     _ = sub_feat_imp.set_xticklabels(np.array(feat_names), rotation=90)
     fig_feat_imp.tight_layout()
@@ -178,8 +187,8 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     # 1 - A SimpleImputer(strategy="most_frequent") to impute missing values
     # 2 - A OneHotEncoder() step to encode the variable
     non_ordinal_categorical_preproc = make_pipeline(
-            SimpleImputer(strategy="most_frequent"),
-            OneHotEncoder()
+        SimpleImputer(strategy="most_frequent"),
+        OneHotEncoder()
     )
     ######################################
 
@@ -201,9 +210,13 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     # First we impute the missing review date with an old date (because there hasn't been
     # a review for a long time), and then we create a new feature from it,
     date_imputer = make_pipeline(
-        SimpleImputer(strategy='constant', fill_value='2010-01-01'),
-        FunctionTransformer(delta_date_feature, check_inverse=False, validate=False)
-    )
+        SimpleImputer(
+            strategy='constant',
+            fill_value='2010-01-01'),
+        FunctionTransformer(
+            delta_date_feature,
+            check_inverse=False,
+            validate=False))
 
     # Some minimal NLP for the "name" column
     reshape_to_1d = FunctionTransformer(np.reshape, kw_args={"newshape": -1})
@@ -221,7 +234,9 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     preprocessor = ColumnTransformer(
         transformers=[
             ("ordinal_cat", ordinal_categorical_preproc, ordinal_categorical),
-            ("non_ordinal_cat", non_ordinal_categorical_preproc, non_ordinal_categorical),
+            ("non_ordinal_cat",
+             non_ordinal_categorical_preproc,
+             non_ordinal_categorical),
             ("impute_zero", zero_imputer, zero_imputed),
             ("transform_date", date_imputer, ["last_review"]),
             ("transform_name", name_tfidf, ["name"])
@@ -241,7 +256,7 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     # HINT: Use the explicit Pipeline constructor so you can assign the names to the steps, do not use make_pipeline
     sk_pipe = Pipeline(
         steps=[
-            ("preprocessor", ColumnTransformer),
+            ("preprocessor", preprocessor),
             ("random_forest", random_Forest),
         ]
     )
